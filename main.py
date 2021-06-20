@@ -4,12 +4,20 @@ from docx import Document
 from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.shared import Inches
 import csv
+import sys
 
 
 class Question:
     question: str
     answers: List[str]
     correct_index: int
+
+    @property
+    def correct_answer(self):
+        return self.answers[self.correct_index]
+
+    def __str__(self):
+        return f"{self.question}\n\n--------\n\n" + '\n\n'.join(self.answers)
 
 
 class Chapter:
@@ -48,7 +56,8 @@ def read_chapter(number: int) -> Chapter:
     return chapter
 
 
-def main():
+def docx():
+    print("Generating docx document")
     document = Document()
     document.add_heading('بنك أسئلة - إقتصاد هندسي', 0).alignment = WD_ALIGN_PARAGRAPH.CENTER
 
@@ -60,6 +69,23 @@ def main():
         document.add_page_break()
 
     document.save('questions.docx')
+
+
+def anki_deck():
+    print("Generating anki deck")
+    with open("anki_csv.csv", "w") as f:
+        writer = csv.writer(f)
+        for i in range(1, 6):
+            chapter = read_chapter(i)
+            for q in chapter.questions:
+                writer.writerow([q, q.correct_answer, f"chapter{i}"])
+
+
+def main():
+    if len(sys.argv) < 2 or sys.argv[1] == "docx":
+        docx()
+    elif sys.argv[1] == "anki":
+        anki_deck()
 
 
 if __name__ == "__main__":
